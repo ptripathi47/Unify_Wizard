@@ -123,9 +123,10 @@ export const verifyOtp = async(req , res) => {
         await temporaryUser.save();
 
          // 6. Checking for phone number existence in User collection
-         const user = await User.find({phone});
+         const user = await User.findOne({phone});
          if (user){
-             return res.status(400).json({
+            console.log(user);
+             return res.status(200).json({
                  success: true,
                  statusCode: 200,
                  message: "OTP Verified Successfully and User already registered",
