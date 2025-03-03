@@ -12,7 +12,7 @@ export const MobileRegisteration = async (req , res , next) => {
         let {phone} = req.body;
 
         // Checking Valid Phone Number
-        if ((phone.length < 13) || (phone.length) > 13){
+        if (phone.length !== 13){
             return res.status(400).json({
                 success: false,
                 statusCode: 400,
