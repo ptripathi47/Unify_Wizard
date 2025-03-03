@@ -12,7 +12,7 @@ export const MobileRegisteration = async (req , res , next) => {
         let {phone} = req.body;
 
         // Checking Valid Phone Number
-        if ((phone.length < 13) || (phone.length) > 13){
+        if (phone.length !== 13){
             return res.status(400).json({
                 success: false,
                 statusCode: 400,
@@ -62,7 +62,7 @@ export const MobileRegisteration = async (req , res , next) => {
             success: true,
             statusCode: 200,
             message: "OTP sent successfully to registered Phone Number.",
-            data: {phone},
+            data: {phone , "otp" : otp} ,
         })
     } catch (error) {
         console.error("Error in signup:", error.message);
@@ -161,7 +161,7 @@ export const aadharAuthentication= async (req , res , next) => {
         })
     }
      
-    // 2. checking for aadhar number length
+    // 2. Checking for aadhar number length
     if(aadhar.length != 12){
         return res.status(400).json({
             success : false,
@@ -169,14 +169,28 @@ export const aadharAuthentication= async (req , res , next) => {
             message: "Enter 12 digit Aadhar Number"
         })
     }
+
+    // Creating new User
+    const newUser = await new User({
+
+    })
     
+    // Saving newUser
+    
+    await newUser.save()
 
 
+    return res.status(200).json({
+        success : true,
+        statusCode: 200,
+        message: "New user registered successfully",
+        user: {
+            id : newUser._id,
+            name: newUser.name
+        }
+    })
 
-
-
-
-   } catch (error) {
+    } catch (error) {
     console.error("Error in registeration of Aadhar Number", error.message);
     return res.status(500).json({
         success: false,
