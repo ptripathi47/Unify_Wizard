@@ -18,11 +18,6 @@ app.use(cors());
 
 app.use(cookieParser());
 
-//Load the swagger specificaation file
-const swaggerDocument = YAML.load('./swagger.yaml');
-
-//Use Swagger UI to serve the documentation at /api-docs
-app.use('/api-docs' , swaggerUi.serve , swaggerUi.setup(swaggerDocument));
 
 connectDb()
 
