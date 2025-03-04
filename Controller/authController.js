@@ -194,17 +194,17 @@ export const aadharAuthentication = async (req, res, next) => {
             success: true,
             statusCode: 200,
             message: "Aadhaar verification successful",
-            userData: response.data,
+            userData: response,
         });
 
     } catch (error) {
-        console.error("Error in Aadhaar verification:", error.response?.data || error.message);
+        console.error("Error in Aadhaar verification:", error.message);
 
         return res.status(500).json({
             success: false,
             statusCode: 500,
             message: `Server Error in Aadhaar verification: ${error.message}`,
-            error: error.response?.data || error.message, // Include detailed error response if available
+            error: error.message, // Include detailed error response if available
         });
     }
 };
