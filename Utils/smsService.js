@@ -17,7 +17,7 @@ const sendOtp = async (message, phoneNumber) => {
         console.log("SMS Sent Successfully");
         return { success: true, sid: response.sid };
     } catch (error) {
-        console.log("Error in sending OTP:", error.message);
+        console.log("Error in sending OTP:", error.message)
         return { success: false, error: error.message };
     }
 };
