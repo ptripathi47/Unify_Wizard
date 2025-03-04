@@ -150,56 +150,65 @@ export const verifyOtp = async(req , res) => {
     }
 };
 
-export const aadharAuthentication= async (req , res , next) => {
-   try {
-    const {aadhar} = req.body;
-     //1. checking for aadhar number
-    if(!aadhar){
-        return res.status(400).json({
-            success: false,
-            statusCode: 400,
-            message: "Aadhar Number required"
-        })
-    }
-     
-    // 2. Checking for aadhar number length
-    if(aadhar.length != 12){
-        return res.status(400).json({
-            success : false,
-            statuscode: 400,
-            message: "Enter 12 digit Aadhar Number"
-        })
-    }
+export const aadharAuthentication = async (req, res, next) => {
+    try {
+        const { aadhaarNumber } = req.body;
 
-    // Creating new User
-    const newUser = await new User({
-
-    })
-    
-    // Saving newUser
-    
-    await newUser.save()
-
-
-    return res.status(200).json({
-        success : true,
-        statusCode: 200,
-        message: "New user registered successfully",
-        user: {
-            id : newUser._id,
-            name: newUser.name
+        // 1. Checking for Aadhaar number
+        if (!aadhaarNumber) {
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                message: "Aadhaar Number is required",
+            });
         }
-    })
+
+        // 2. Checking Aadhaar number length
+        if (aadhaarNumber.length !== 12 || !/^\d+$/.test(aadhaarNumber)) {
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                message: "Enter a valid 12-digit Aadhaar Number",
+            });
+        }
+
+        // 3. Load Cashfree Credentials
+        const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
+
+        const options = {
+            method: 'POST',
+            headers: {
+              'x-client-id': CASHFREE_APP_ID,
+              'x-client-secret': CASHFREE_SECRET_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: `{"aadhaar_number": ${aadhaarNumber}}`
+          };
+          
+          const response = await fetch('https://sandbox.cashfree.com/verification/offline-aadhaar/otp', options)
+            .then(response => response.json())
+            .then(response => console.log(response))
+            .catch(err => console.error(err));
+        // 5. Return response
+        return res.status(200).json({
+            success: true,
+            statusCode: 200,
+            message: "Aadhaar verification successful",
+            userData: response.data,
+        });
 
     } catch (error) {
-    console.error("Error in registeration of Aadhar Number", error.message);
-    return res.status(500).json({
-        success: false,
-        statusCode: 500,
-        message: `Server Error in registeration of Aadhar Number ${error.message}`
-    })
-   }
-}
+        console.error("Error in Aadhaar verification:", error.response?.data || error.message);
+
+        return res.status(500).json({
+            success: false,
+            statusCode: 500,
+            message: `Server Error in Aadhaar verification: ${error.message}`,
+            error: error.response?.data || error.message, // Include detailed error response if available
+        });
+    }
+};
+
 
 export const panNumber = async (req , res , next) => {
     try {

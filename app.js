@@ -24,6 +24,7 @@ app.get('/', (req , res) => {
     res.send("Hello , Welcome to Unify Wizard application");
 })
 
+
 app.use('/api/users/auth' , authRoutes);
 
 const PORT = process.env.Port;

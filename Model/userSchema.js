@@ -25,12 +25,12 @@ const userSchema = new mongoose.Schema({
     required: [true , "PAN Number is required"], 
     unique: true,
   },
-  aadhar:{
+  aadhaarNumber:{
     type: String,
-    required: [true, "Aadhar Number is required"],
+    required: [true, "Aadhaar Number is required"],
     unique: true,
-    minLength: [12 , "Aadhar Number should be of 12 digits"],
-    maxLength: [12 , "Aadhar Number should be of 12 digits"]
+    minLength: [12 , "Aadhaar Number should be of 12 digits"],
+    maxLength: [12 , "Aadhaar Number should be of 12 digits"]
   },
   phone: {
     type: String,
