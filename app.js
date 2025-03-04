@@ -5,8 +5,7 @@ import authRoutes from "./Routes/authRoutes.js"
 import "dotenv/config";
 import cors from "cors";
 import { error } from "console";
-import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
+
 import { connectDb } from "./Config/dbConnection.js";
 const app = express();
 
