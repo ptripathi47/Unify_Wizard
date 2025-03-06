@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import lodash from "lodash";
 import axios from "axios";
 import { generatedOtp } from "../Utils/generateOTP.js";
+import dotenv from "dotenv";
+dotenv.config();
 import { User } from "../Model/userSchema.js";
 import TemporaryUser from "../Model/temporaryUser.js";
 import sendOtp from "../Utils/smsService.js";
@@ -150,31 +152,15 @@ export const verifyOtp = async(req , res) => {
     }
 };
 
-export const aadharAuthentication = async (req, res, next) => {
+
+//Aadhaar OTP generating function
+export const aadharOtpGenerate = async (req, res) => {
     try {
-        const { aadhaarNumber } = req.body;
-
-        // 1. Checking for Aadhaar number
-        if (!aadhaarNumber) {
-            return res.status(400).json({
-                success: false,
-                statusCode: 400,
-                message: "Aadhaar Number is required",
-            });
-        }
-
-        // 2. Checking Aadhaar number length
-        if (aadhaarNumber.length !== 12 || !/^\d+$/.test(aadhaarNumber)) {
-            return res.status(400).json({
-                success: false,
-                statusCode: 400,
-                message: "Enter a valid 12-digit Aadhaar Number",
-            });
-        }
-
-        // 3. Load Cashfree Credentials
+        const {aadhaarNumber} = req.body;
+        // 2️⃣ Load Cashfree Credentials
         const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
 
+        // First call for generating OTP via Aadhaar number
         const options = {
             method: 'POST',
             headers: {
@@ -182,34 +168,89 @@ export const aadharAuthentication = async (req, res, next) => {
               'x-client-secret': CASHFREE_SECRET_KEY,
               'Content-Type': 'application/json'
             },
-            body: `{"aadhaar_number": ${aadhaarNumber}}`
-          };
-          
-          const response = await fetch('https://sandbox.cashfree.com/verification/offline-aadhaar/otp', options)
-            .then(response => response.json())
-            .then(response => console.log(response))
-            .catch(err => console.error(err));
-        // 5. Return response
+            body: JSON.stringify({ aadhaar_number: aadhaarNumber })
+        };
+
+        const firstResponse = await fetch(`${CASHFREE_BASE_URL}/verification/offline-aadhaar/otp`, options);
+        const firstData = await firstResponse.json();
+        console.log("First API Response:", firstData);
+
+        if (!firstData.ref_id) {
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                message: "Invalid Aadhaar number or Mobile number not linked",
+                error: firstData
+            });
+        }
+        const ref_id = firstData.ref_id;
+        return res.status(200).json({
+            success: true,
+            statusCode: 200,
+            message: "Aadhaar OTP sent successfully",
+            reference_id : ref_id
+        })
+       } catch (error) {
+        console.error("❌ Server Error in sending Aadhaar OTP:", error.response ? error.response.data : error.message);
+            return res.status(500).json({
+            success: false,
+            statusCode: 500,
+            message: `Server Error in sending Aadhaar OTP: ${error.message}`,
+            error: error.response ? error.response.data : error.message
+        });
+    }
+};
+
+//Aadhaar verification function
+export const aadhaarVerification = async(req , res , next) =>{
+    try {
+        const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
+        const {aadhaarOtp , ref_id } = req.body;
+        const otp = aadhaarOtp; // Replace with actual OTP input from the user
+
+        // Second call for verifying Aadhaar with OTP
+        const secondOptions = {
+            method: 'POST',
+            headers: {
+              'x-client-id': CASHFREE_APP_ID,
+              'x-client-secret': CASHFREE_SECRET_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ otp, ref_id })
+        };
+
+        const secondResponse = await fetch(`${CASHFREE_BASE_URL}/verification/offline-aadhaar/verify`, secondOptions);
+        const secondData = await secondResponse.json();
+        console.log("Second API Response:", secondData);
+
+        if (secondData.code === "verification_failed") {
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                message: "Invalid OTP"
+            });
+        }
+
+        // 5️⃣ Return Final Response
         return res.status(200).json({
             success: true,
             statusCode: 200,
             message: "Aadhaar verification successful",
-            userData: response,
+            otpVerificationData: secondData,
         });
 
     } catch (error) {
-        console.error("Error in Aadhaar verification:", error.message);
+        console.error("❌ Error in Aadhaar verification:", error.response ? error.response.data : error.message);
 
         return res.status(500).json({
             success: false,
             statusCode: 500,
             message: `Server Error in Aadhaar verification: ${error.message}`,
-            error: error.message, // Include detailed error response if available
+            error: error.response ? error.response.data : error.message
         });
-    }
-};
 
-
+    } 
+}
 export const panNumber = async (req , res , next) => {
     try {
         const {PAN} = req.body;

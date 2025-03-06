@@ -31,7 +31,7 @@ const PORT = process.env.Port;
 const ip = process.env.ip;
 try {
     app.listen(PORT, ip ,  () => {
-        console.log(`Server is listening at http:// ${ip}:${PORT} `);
+        console.log(`Server is listening at Port Number : ${PORT} `);
     })
 } catch (error) {
     console.log("Error in Server Connection");
