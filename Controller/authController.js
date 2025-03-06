@@ -157,6 +157,20 @@ export const verifyOtp = async(req , res) => {
 export const aadharOtpGenerate = async (req, res) => {
     try {
         const {aadhaarNumber} = req.body;
+        if(!aadhaarNumber){
+            return res.status(400).json({
+                success : false,
+                statusCode : 400,
+                message : "Aadhar Number is required"
+            })
+        }
+        if(aadhaarNumber.length != 12){
+            return res.status(400).json({
+                success : false,
+                statusCode: 400,
+                message: "Enter valid Aadhaar Number"
+            })
+        }
         // 2️⃣ Load Cashfree Credentials
         const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
 
@@ -207,6 +221,21 @@ export const aadhaarVerification = async(req , res , next) =>{
         const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
         const {aadhaarOtp , ref_id } = req.body;
         const otp = aadhaarOtp; // Replace with actual OTP input from the user
+        if(otp.length != 6){
+            return res.status(400).json({
+                success : false,
+                statusCode : 400,
+                message : "OTP should be of 6 digit"
+            })
+        }
+        if(!ref_id){
+            return res.status(400).json({
+                success: false,
+                statusCode: 400,
+                message: "Enter reference id"
+            })
+        }
+
 
         // Second call for verifying Aadhaar with OTP
         const secondOptions = {
@@ -223,7 +252,7 @@ export const aadhaarVerification = async(req , res , next) =>{
         const secondData = await secondResponse.json();
         console.log("Second API Response:", secondData);
 
-        if (secondData.code === "verification_failed") {
+        if (secondData.code === ("verification_failed" || "otp_empty") || secondData.type === "validation_error" ) {
             return res.status(400).json({
                 success: false,
                 statusCode: 400,
@@ -251,15 +280,15 @@ export const aadhaarVerification = async(req , res , next) =>{
 
     } 
 }
-export const panNumber = async (req , res , next) => {
+export const panVerification = async (req , res , next) => {
     try {
-        const {PAN} = req.body;
+        const {PAN , name} = req.body;
         // 1. Checking for PAN Number 
-        if (!PAN){
+        if (!PAN || !name){
             return res.status(400).json({
                 success: false,
                 statusCode: 400,
-                message: "PAN Number is required"
+                message: "Enter the required fields"
             })
         }
 
@@ -268,9 +297,31 @@ export const panNumber = async (req , res , next) => {
             return res.status(400).json({
                 success: false,
                 statusCode: 400,
-                message: "PAN Number must be of Characters"
+                message: "PAN Number must be of 10 Characters"
             })
         }
+
+        //3 . Verification of PAN number
+        const { CASHFREE_APP_ID, CASHFREE_SECRET_KEY, CASHFREE_BASE_URL } = process.env;
+        const options = {
+            method: 'POST',
+            headers: {
+              'x-client-id': CASHFREE_APP_ID,
+              'x-client-secret': CASHFREE_SECRET_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({pan : PAN , name: name})
+          };
+          
+          const panResponse = await fetch(`${CASHFREE_BASE_URL}/verification/pan`, options);
+          const panData = await panResponse.json();
+          return res.status(200).json({
+            success: true,
+            statusCode: 200,
+            message: "PAN Verified Successfully",
+            data : panData
+          })
+            
     } catch (error) {
         console.error("Error in verification of PAN card number", error.message);
         return res.status(500).json({
