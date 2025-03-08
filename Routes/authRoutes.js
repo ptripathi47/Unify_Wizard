@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authenticateToken } from "../Middlewares/verifyToken.js";
 import { MobileRegisteration,
       verifyOtp ,
       aadharOtpGenerate, 
@@ -9,7 +10,7 @@ const router = Router();
 router.post('/signup', MobileRegisteration);
 router.post('/signupVerification', verifyOtp);
 router.post('/aadharOtpGenerate' , aadharOtpGenerate)
-router.post('/aadharVerification', aadhaarVerification);
-router.post('/panVerification', panVerification);
+router.post('/aadharVerification', authenticateToken,  aadhaarVerification);
+router.post('/panVerification', authenticateToken, panVerification);
 
 export default router;
