@@ -4,7 +4,7 @@ const electricityBillSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the user making the payment
+      ref: "User",
       required: true,
     },
     electricityBoard: {
@@ -20,18 +20,23 @@ const electricityBillSchema = new mongoose.Schema(
         "UPPCL",
         "WBSEDCL",
         "Other",
-      ], // Add more electricity boards as needed
+      ],
+    },
+    otherBoardName: {
+      type: String,
+      required: function () {
+        return this.electricityBoard === "Other";
+      },
+      trim: true,
     },
     consumerNumber: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     billNumber: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     billDate: {
@@ -50,6 +55,7 @@ const electricityBillSchema = new mongoose.Schema(
     lateFee: {
       type: Number,
       default: 0,
+      min: 0,
     },
     totalAmount: {
       type: Number,
@@ -58,6 +64,7 @@ const electricityBillSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: ["UPI", "Net Banking", "Credit Card", "Debit Card"],
+      default: "UPI",
       required: true,
     },
     paymentStatus: {
@@ -77,4 +84,16 @@ const electricityBillSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const ElectricityBillPayment = mongoose.model("ElectricityBillPayment", electricityBillSchema);
+// Auto-calculate totalAmount before saving
+electricityBillSchema.pre("save", function (next) {
+  this.totalAmount = this.amountDue + this.lateFee;
+  next();
+});
+
+// Making consumerNumber unique per electricity board
+electricityBillSchema.index({ consumerNumber: 1, electricityBoard: 1 }, { unique: true });
+
+export const ElectricityBillPayment = mongoose.model(
+  "ElectricityBillPayment",
+  electricityBillSchema
+);

@@ -51,7 +51,7 @@ const checkAndMoveUser = async (phone , req , res) => {
 
         // ❌ Delete from TemporaryUser
         await TemporaryUser.deleteOne({ phone });
-        console.log(`User ${phone} successfully registered and removed from temporary collection.`);
+        console.log(`User with this phone number ${phone} successfully registered and removed from temporary collection.`);
 
         return res.status(200).json({
             success: true,
@@ -63,17 +63,10 @@ const checkAndMoveUser = async (phone , req , res) => {
 };
 
 export const MobileRegisteration = async (req , res , next) => {
+
     try {
         let {phone} = req.body;
 
-        // Checking Valid Phone Number
-        if (phone.length !== 13){
-            return res.status(400).json({
-                success: false,
-                statusCode: 400,
-                message: "Enter valid Phone Number"
-            })
-        }
         // 1. Checking for missing field (PHONE Number)
         if(!phone){
             return res.status(400).json({
@@ -81,7 +74,16 @@ export const MobileRegisteration = async (req , res , next) => {
                 statusCode: 400,
                 message: "Phone Number is required"
             })
-    };
+        };
+        // Checking for a valid number
+        const phoneCheck = /^[0-9]{10}$/;
+         if(!phoneCheck.test(phone)){
+            return res.status(400).json({
+                success: false,
+                statusCode : 400,
+                message : "Phone number is invalid"
+            })
+        }
     
         // 2. Generate OTP and save temperory user
         const currentTime = Date.now();
