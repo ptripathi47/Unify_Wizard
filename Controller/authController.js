@@ -76,14 +76,14 @@ export const MobileRegisteration = async (req , res , next) => {
             })
         };
         // Checking for a valid number
-        const phoneCheck = /^[0-9]{10}$/;
-         if(!phoneCheck.test(phone)){
-            return res.status(400).json({
-                success: false,
-                statusCode : 400,
-                message : "Phone number is invalid"
-            })
-        }
+       // const phoneCheck = /^[0-9]{10}$/;
+         ///if(!phoneCheck.test(phone)){
+           // return res.status(400).json({
+               // success: false,
+               // statusCode : 400,
+                //message : "Phone number is invalid"
+            //})
+       // }
     
         // 2. Generate OTP and save temperory user
         const currentTime = Date.now();
